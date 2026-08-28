@@ -107,7 +107,7 @@ function iglesia_live_settings_page() {
                     <span style="font-weight:600;color:#475569;">Detectar automáticamente el estado del live</span>
                 </label>
                 <p style="color:#94a3b8;font-size:12px;margin-top:8px;margin-left:28px;">
-                    El sistema verificará cada 60 segundos si hay una transmisión en vivo activa usando la API de YouTube.
+                    El sitio verifica constantemente el estado del live. La consulta a YouTube se optimiza con caché interna para no gastar cuota de API.
                 </p>
             </div>
 

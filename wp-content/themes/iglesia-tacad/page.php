@@ -8,6 +8,9 @@ $page_slug = $post ? $post->post_name : '';
 
 // Route to the right page content based on slug
 switch ($page_slug) {
+    case 'jesus':
+        include get_template_directory() . '/page-jesus.php';
+        break;
     case 'acerca-de':
         include get_template_directory() . '/page-acerca-de.php';
         break;
@@ -59,21 +62,30 @@ switch ($page_slug) {
         iglesia_page_banner('Contacto');
         iglesia_page_contacto();
         break;
+    case 'blog':
+        // Blog mantenible: listado dinámico desde Entradas con categorías y paginación
+        iglesia_page_banner('Blog', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1600&auto=format&fit=crop&q=60');
+        iglesia_page_blog();
+        break;
     case 'pastor-melky':
-        iglesia_page_banner('Pastor Melky', 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=1600&auto=format&fit=crop&q=60');
-        iglesia_page_pastor('Melky', 'Pastor Principal y Fundador', 'El Pastor Melky lleva más de 20 años al frente de la iglesia, llevando la Palabra de Dios con pasión y fidelidad. Su ministerio se caracteriza por la enseñanza profunda de las Escrituras y el amor por las almas.');
-        break;
     case 'pastor-orlando':
-        iglesia_page_banner('Pastor Orlando', 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=1600&auto=format&fit=crop&q=60');
-        iglesia_page_pastor('Orlando', 'Pastor de Jóvenes y Ministerios', 'El Pastor Orlando lidera el ministerio de jóvenes con gran energía y visión. Su corazón es ver a la juventud comprometida con Dios y caminando en propósito.');
-        break;
     case 'pastor-toby-jr':
-        iglesia_page_banner('Pastor Toby Jr.', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1600&auto=format&fit=crop&q=60');
-        iglesia_page_pastor('Toby Jr.', 'Pastor General', 'El Pastor Toby Jr. es el pastor general de la iglesia. Con una visión clara de Dios, lidera la congregación con pasión, sabiduría y un profundo amor por las Escrituras. Su ministerio se caracteriza por la enseñanza clara de la Palabra y el cuidado pastoral.');
-        break;
     case 'pastor-fundador':
-        iglesia_page_banner('Pastor Fundador', 'https://images.unsplash.com/photo-1484820540004-14229fe36ca4?w=1600&auto=format&fit=crop&q=60');
-        iglesia_page_pastor('Fundador', 'Pastor Fundador', 'El Pastor Fundador estableció esta iglesia sobre el fundamento de la Palabra de Dios. Con años de ministerio fiel, ha sido un pilar de sabiduría, oración y visión para la congregación. Su legado de fe continúa inspirando a nuevas generaciones.');
+        // Dynamic: look up predicador by post_name from CPT
+        $predicador = get_page_by_path($page_slug, OBJECT, 'predicador');
+        $predi_activo = $predicador ? get_post_meta($predicador->ID, '_iglesia_predicador_activo', true) : '';
+        if ($predicador && ($predi_activo === '' || $predi_activo === '1')) {
+            iglesia_page_banner(
+                $predicador->post_title,
+                'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=1600&auto=format&fit=crop&q=60'
+            );
+            iglesia_page_pastor_dynamic($predicador);
+        } else {
+            $name = str_replace(['pastor-','-'],['',' '], $page_slug);
+            $name = ucwords($name);
+            iglesia_page_banner($name);
+            echo '<section style="padding:60px 0;text-align:center;"><div class="container"><p style="color:var(--text-muted);">Predicador no encontrado. <a href="' . esc_url(admin_url('post-new.php?post_type=predicador')) . '">Añadir desde el admin</a>.</p></div></section>';
+        }
         break;
     case 'ofrenda':
         iglesia_page_banner('Ofrenda y Donaciones');
@@ -156,21 +168,30 @@ function iglesia_page_visitanos() { ?>
 // ===========================
 // MISSION PAGE FUNCTION
 // ===========================
-function iglesia_page_mision() { ?>
+function iglesia_page_mision() {
+    $mv = iglesia_get_mision_vision_data();
+    $misiones = !empty($mv['mision']) ? $mv['mision'] : [];
+    $visiones = !empty($mv['vision']) ? $mv['vision'] : [];
+?>
 <section style="padding: 80px 20px;">
     <div class="container" style="max-width:900px;margin:0 auto;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:50px;margin-bottom:60px;">
-            <div style="background:var(--blue-primary);color:#fff;padding:50px 40px;border-radius:16px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:50px;margin-bottom:60px;" class="mv-grid">
+            <?php foreach ($misiones as $i => $m) : ?>
+            <div style="background:var(--blue-primary);color:#fff;padding:50px 40px;border-radius:16px;margin-bottom:<?php echo count($misiones) > 1 ? '30px' : '0'; ?>;">
                 <div style="font-size:3rem;margin-bottom:20px;">🎯</div>
-                <h2 style="font-family:'Montserrat',sans-serif;font-size:2rem;font-weight:800;margin-bottom:20px;">Misión</h2>
-                <p style="opacity:.9;line-height:1.9;font-size:1.05rem;">Predicar el Evangelio de Jesucristo a toda criatura, haciendo discípulos que glorifiquen a Dios con su vida, sean transformados por su Palabra y sirvan a su generación con excelencia y amor.</p>
+                <h2 style="font-family:'Montserrat',sans-serif;font-size:2rem;font-weight:800;margin-bottom:20px;"><?php echo esc_html($m['title'] ?: 'Misión'); ?></h2>
+                <p style="opacity:.9;line-height:1.9;font-size:1.05rem;"><?php echo esc_html($m['content']); ?></p>
             </div>
+            <?php endforeach; ?>
+            <?php foreach ($visiones as $v) : ?>
             <div style="background:#f8f9ff;color:var(--text-dark);padding:50px 40px;border-radius:16px;border-top:5px solid var(--blue-primary);">
                 <div style="font-size:3rem;margin-bottom:20px;">👁️</div>
-                <h2 style="font-family:'Montserrat',sans-serif;font-size:2rem;font-weight:800;margin-bottom:20px;color:var(--blue-primary);">Visión</h2>
-                <p style="color:var(--text-muted);line-height:1.9;font-size:1.05rem;">Ser una iglesia de impacto regional que forme líderes íntegros, alcance a los perdidos y transforme comunidades enteras a través del poder del Evangelio y el amor de Cristo.</p>
+                <h2 style="font-family:'Montserrat',sans-serif;font-size:2rem;font-weight:800;margin-bottom:20px;color:var(--blue-primary);"><?php echo esc_html($v['title'] ?: 'Visión'); ?></h2>
+                <p style="color:var(--text-muted);line-height:1.9;font-size:1.05rem;"><?php echo esc_html($v['content']); ?></p>
             </div>
+            <?php endforeach; ?>
         </div>
+        <style>@media(max-width:768px){.mv-grid{grid-template-columns:1fr !important;gap:30px !important;}}</style>
         <div style="text-align:center;background:var(--blue-primary);padding:50px 40px;border-radius:16px;color:#fff;">
             <h2 style="font-family:'Montserrat',sans-serif;font-size:2rem;margin-bottom:15px;">Nuestros Valores</h2>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:25px;margin-top:30px;">
@@ -189,33 +210,38 @@ function iglesia_page_mision() { ?>
 // ===========================
 // MINISTERIOS
 // ===========================
-function iglesia_page_ministerios() { ?>
+function iglesia_page_ministerios() {
+    $ministerios = new WP_Query([
+        'post_type' => 'ministerio',
+        'posts_per_page' => -1,
+        'meta_query' => iglesia_meta_activa('ministerio_activo'),
+        'orderby' => 'menu_order',
+        'order' => 'ASC',
+    ]);
+    ?>
 <section style="padding:var(--section-pad);">
     <div class="container">
         <p class="section-title" style="text-align:center;">Nuestra Casa</p>
         <h2 class="section-heading" style="text-align:center;margin-bottom:40px;">Ministerios de la Iglesia</h2>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:25px;">
-            <?php
-            $ministerios = [
-                ['🎵','Ministerio de Alabanza','El equipo de adoración que conduce a los congregantes a la presencia de Dios.','https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=600&auto=format&fit=crop','ministerio-alabanza'],
-                ['👶','Ministerio Infantil','Formamos niños con carácter y amor a Dios desde pequeños.','https://images.unsplash.com/photo-1484820540004-14229fe36ca4?w=600&auto=format&fit=crop','ministerio-infantil'],
-                ['🙏','Ministerio de Oración','Intercesores que sostienen a la iglesia en oración continua.','https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=600&auto=format&fit=crop','ministerio-oracion'],
-                ['🌹','Ministerio de Mujeres','Mujeres fuertes en Dios que se edifican y apoyan mutuamente.','https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&auto=format&fit=crop','ministerio-mujeres'],
-                ['💪','Ministerio de Hombres','Hombres de Dios que lideran en el hogar, la iglesia y la sociedad.','https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&auto=format&fit=crop','ministerio-hombres'],
-                ['⚡','Ministerio de Jóvenes','Jóvenes apasionados que viven su fe con autenticidad y energía.','https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&auto=format&fit=crop','ministerio-jovenes'],
-            ];
-            foreach ($ministerios as $m) { ?>
-                <a href="<?php echo esc_url(home_url('/' . $m[4] . '/')); ?>" class="ministry-card" style="display:block;">
-                    <img src="<?php echo esc_url($m[3]); ?>" alt="<?php echo esc_attr($m[1]); ?>">
+            <?php if ($ministerios->have_posts()) : while ($ministerios->have_posts()) : $ministerios->the_post();
+                $descripcion = get_post_meta(get_the_ID(), 'ministerio_descripcion', true);
+                $imagen_id = get_post_meta(get_the_ID(), 'ministerio_imagen_id', true);
+                $imagen_url = $imagen_id ? wp_get_attachment_image_url($imagen_id, 'medium') : 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=600&auto=format&fit=crop';
+                $slug = get_post_field('post_name', get_the_ID());
+            ?>
+                <a href="<?php echo esc_url(home_url('/ministerio-' . $slug . '/')); ?>" class="ministry-card" style="display:block;">
+                    <img src="<?php echo esc_url($imagen_url); ?>" alt="<?php echo esc_attr(get_the_title()); ?>">
                     <div class="ministry-card-overlay">
                         <div>
-                            <div style="font-size:1.5rem;margin-bottom:5px;"><?php echo $m[0]; ?></div>
-                            <h3><?php echo esc_html($m[1]); ?></h3>
-                            <p style="font-size:.8rem;color:rgba(255,255,255,.85);margin-top:5px;"><?php echo esc_html($m[2]); ?></p>
+                            <h3><?php echo esc_html(get_the_title()); ?></h3>
+                            <p style="font-size:.8rem;color:rgba(255,255,255,.85);margin-top:5px;"><?php echo esc_html(wp_trim_words($descripcion, 15)); ?></p>
                         </div>
                     </div>
                 </a>
-            <?php } ?>
+            <?php endwhile; else : ?>
+                <p style="text-align:center;grid-column:1/-1;color:var(--text-muted);">No hay ministerios registrados. <a href="<?php echo admin_url('post-new.php?post_type=ministerio'); ?>">Agregar uno nuevo</a></p>
+            <?php endif; wp_reset_postdata(); ?>
         </div>
     </div>
 </section>
@@ -225,30 +251,130 @@ function iglesia_page_ministerios() { ?>
 // FAQ
 // ===========================
 function iglesia_page_faq() {
-    $faqs = [
-        ['¿Qué tipo de iglesia son?', 'Somos una iglesia cristiana evangélica que cree en la Biblia como Palabra infalible de Dios. Nos caracterizamos por la enseñanza profunda de la Escritura, adoración genuina y comunidad familiar.'],
-        ['¿Necesito ser creyente para visitarlos?', '¡No! Todas las personas son bienvenidas, sin importar su trasfondo religioso o situación de vida. Nuestra puerta está abierta para todos.'],
-        ['¿Tienen programas para niños?', 'Sí, contamos con un ministerio infantil activo con aulas especializadas, maestros capacitados y material educativo cristiano durante cada servicio dominical.'],
-        ['¿Cómo puedo comenzar a servir en la iglesia?', 'Puedes hablar con cualquiera de nuestros líderes, llenar una tarjeta de interés en la recepción, o enviarnos un correo electrónico. Con gusto te orientamos.'],
-        ['¿Tienen transmisión en línea?', 'Sí, transmitimos nuestros cultos en vivo por YouTube y en esta misma página web. También tenemos streaming 24/7 disponible.'],
-        ['¿Cómo puedo hacer una donación u ofrenda?', 'Puedes dar tu ofrenda en el culto o visitar nuestra página de "Ofrenda" donde encontrarás los métodos disponibles para hacerlo en línea.'],
-    ];
+    // Obtener secciones activas ordenadas
+    $secciones = new WP_Query([
+        'post_type' => 'faq_seccion',
+        'posts_per_page' => -1,
+        'meta_query' => iglesia_meta_activa('faq_seccion_activo'),
+        'orderby' => 'menu_order',
+        'order' => 'ASC',
+    ]);
+
+    // Obtener todas las FAQs activas
+    $faqs = new WP_Query([
+        'post_type' => 'faq',
+        'posts_per_page' => -1,
+        'meta_query' => [
+            'relation' => 'AND',
+            iglesia_meta_activa('faq_activo'),
+            [
+                'key' => 'faq_seccion_id',
+                'compare' => 'EXISTS',
+            ]
+        ],
+        'orderby' => 'menu_order',
+        'order' => 'ASC',
+    ]);
+
+    // Organizar FAQs por sección
+    $faqs_por_seccion = [];
+    if ($faqs->have_posts()) {
+        while ($faqs->have_posts()) {
+            $faqs->the_post();
+            $seccion_id = get_post_meta(get_the_ID(), 'faq_seccion_id', true);
+            if ($seccion_id) {
+                if (!isset($faqs_por_seccion[$seccion_id])) {
+                    $faqs_por_seccion[$seccion_id] = [];
+                }
+                $faqs_por_seccion[$seccion_id][] = [
+                    'title' => get_the_title(),
+                    'content' => get_post_meta(get_the_ID(), 'faq_descripcion', true),
+                ];
+            }
+        }
+        wp_reset_postdata();
+    }
+
+    // Obtener FAQs sin sección (se mostrarán al final)
+    $faqs_sin_seccion = new WP_Query([
+        'post_type' => 'faq',
+        'posts_per_page' => -1,
+        'meta_query' => [
+            'relation' => 'AND',
+            iglesia_meta_activa('faq_activo'),
+            [
+                'key' => 'faq_seccion_id',
+                'compare' => 'NOT EXISTS',
+            ]
+        ],
+        'orderby' => 'menu_order',
+        'order' => 'ASC',
+    ]);
+
+    $hay_sin_seccion = $faqs_sin_seccion->have_posts();
     ?>
     <section class="faq-section">
         <div class="container" style="max-width:800px;margin:0 auto;">
             <p class="section-title">Resolvemos tus dudas</p>
             <h2 class="section-heading" style="margin-bottom:40px;">Preguntas Frecuentes</h2>
-            <div class="accordion">
-                <?php foreach ($faqs as $i => $faq) { ?>
-                    <div class="accordion-item <?php echo $i === 0 ? 'open' : ''; ?>">
-                        <button class="accordion-header">
-                            <?php echo esc_html($faq[0]); ?>
-                            <span class="accordion-icon">+</span>
-                        </button>
-                        <div class="accordion-body"><?php echo esc_html($faq[1]); ?></div>
+
+            <?php if ($secciones->have_posts() || $hay_sin_seccion) : ?>
+
+                <?php
+                // Mostrar secciones con FAQs
+                while ($secciones->have_posts()) : $secciones->the_post();
+                    $seccion_id = get_the_ID();
+                    $seccion_faqs = isset($faqs_por_seccion[$seccion_id]) ? $faqs_por_seccion[$seccion_id] : [];
+
+                    if (empty($seccion_faqs)) {
+                        continue; // No mostrar secciones vacías
+                    }
+                ?>
+                    <div class="faq-section-wrap" style="margin-bottom:40px;">
+                        <h3 class="faq-section-title" style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--blue-primary);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--blue-light);">
+                            <?php echo esc_html(get_the_title()); ?>
+                        </h3>
+                        <div class="accordion">
+                            <?php foreach ($seccion_faqs as $index => $faq) : ?>
+                                <div class="accordion-item <?php echo $index === 0 ? 'open' : ''; ?>">
+                                    <button class="accordion-header">
+                                        <?php echo esc_html($faq['title']); ?>
+                                        <span class="accordion-icon">+</span>
+                                    </button>
+                                    <div class="accordion-body"><?php echo esc_html($faq['content']); ?></div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
-                <?php } ?>
-            </div>
+                <?php endwhile; wp_reset_postdata(); ?>
+
+                <?php
+                // Mostrar FAQs sin sección
+                if ($hay_sin_seccion) :
+                ?>
+                    <div class="faq-section-wrap" style="margin-bottom:40px;">
+                        <h3 class="faq-section-title" style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;color:var(--blue-primary);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--blue-light);">
+                            General
+                        </h3>
+                        <div class="accordion">
+                            <?php $first = true; while ($faqs_sin_seccion->have_posts()) : $faqs_sin_seccion->the_post();
+                                $descripcion = get_post_meta(get_the_ID(), 'faq_descripcion', true);
+                            ?>
+                                <div class="accordion-item <?php echo $first ? 'open' : ''; ?>">
+                                    <button class="accordion-header">
+                                        <?php echo esc_html(get_the_title()); ?>
+                                        <span class="accordion-icon">+</span>
+                                    </button>
+                                    <div class="accordion-body"><?php echo esc_html($descripcion); ?></div>
+                                </div>
+                            <?php $first = false; endwhile; wp_reset_postdata(); ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+            <?php else : ?>
+                <p style="text-align:center;color:var(--text-muted);">No hay preguntas frecuentes registradas. <a href="<?php echo admin_url('post-new.php?post_type=faq'); ?>">Agregar una nueva</a></p>
+            <?php endif; ?>
         </div>
     </section>
     <?php
@@ -263,10 +389,10 @@ function iglesia_page_contacto() { ?>
         <div class="contact-info">
             <h2>Contáctanos</h2>
             <p>Estamos aquí para servirte. No dudes en escribirnos o visitarnos. ¡Con gusto te atendemos!</p>
-            <div class="contact-info-item"><div class="icon-wrap"><i class="fas fa-map-marker-alt"></i></div><p><strong>Dirección</strong>3 Calle Poniente, Barrio El Centro, La Palma, Chalatenango, El Salvador</p></div>
-            <div class="contact-info-item"><div class="icon-wrap"><i class="fas fa-phone-alt"></i></div><p><strong>Teléfono</strong>(503) 0000-0000</p></div>
-            <div class="contact-info-item"><div class="icon-wrap"><i class="fas fa-envelope"></i></div><p><strong>Email</strong>iglesia@portaliglesia.com</p></div>
-            <div class="contact-info-item"><div class="icon-wrap"><i class="fas fa-clock"></i></div><p><strong>Horarios de Cultos</strong>Mar 6:30pm · Mié 9am · Jue 6:30pm · Sáb 5:30am/3pm/6:30pm · Dom 9am–3pm</p></div>
+            <?php $dir = iglesia_direccion(); if ($dir): ?><div class="contact-info-item"><div class="icon-wrap"><i class="fas fa-map-marker-alt"></i></div><p><strong>Dirección</strong><?php echo esc_html($dir); ?></p></div><?php endif; ?>
+            <?php $tel = iglesia_telefono(); if ($tel): ?><div class="contact-info-item"><div class="icon-wrap"><i class="fas fa-phone-alt"></i></div><p><strong>Teléfono</strong><?php echo esc_html($tel); ?></p></div><?php endif; ?>
+            <?php $em = iglesia_email(); if ($em): ?><div class="contact-info-item"><div class="icon-wrap"><i class="fas fa-envelope"></i></div><p><strong>Email</strong><?php echo esc_html($em); ?></p></div><?php endif; ?>
+            <?php $hor = iglesia_horarios(); if ($hor): ?><div class="contact-info-item"><div class="icon-wrap"><i class="fas fa-clock"></i></div><p><strong>Horarios de Cultos</strong><?php echo esc_html(str_replace("\n", ' · ', $hor)); ?></p></div><?php endif; ?>
         </div>
         <div class="contact-form">
             <h2 style="font-family:var(--font-display);font-size:1.6rem;font-weight:800;color:var(--blue-primary);margin-bottom:25px;">Envíanos un Mensaje</h2>
@@ -300,7 +426,7 @@ function iglesia_page_contacto() { ?>
             messageDiv.className = '';
             messageDiv.innerHTML = '';
 
-            fetch('http://localhost/PortalWebTACAD/wp-json/iglesia/v1/contact', {
+            fetch('<?php echo esc_js(esc_url_raw(rest_url('iglesia/v1/contact'))); ?>', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -343,56 +469,47 @@ function iglesia_page_contacto() { ?>
 <?php }
 
 // ===========================
-// PASTOR TEMPLATE
+// PASTOR TEMPLATE – Dinámico desde CPT «predicador»
 // ===========================
-function iglesia_page_pastor($name, $role, $bio) {
-    $tmpl_dir = get_template_directory();
-    $tmpl_uri = get_template_directory_uri();
-
-    // Photo mapping
-    $photo_map = [
-        'Melky' => ['pastorMelky.jpeg', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop'],
-        'Orlando' => ['pastor-orlando.jpg', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop'],
-        'Toby Jr.' => ['pastor-toby.jpg', 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&auto=format&fit=crop'],
-        'Fundador' => ['pastor-fundador.jpg', 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&auto=format&fit=crop'],
-    ];
-
-    $photo_data = isset($photo_map[$name]) ? $photo_map[$name] : ['', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop'];
-    $local = $tmpl_dir . '/images/' . $photo_data[0];
-    $photo_url = file_exists($local) ? $tmpl_uri . '/images/' . $photo_data[0] : $photo_data[1];
-    
-    $all_videos = [
-        'Melky' => [['El Poder de la Oración','https://www.youtube.com/embed/dQw4w9WgXcQ'],['La Fe que Agrada a Dios','https://www.youtube.com/embed/dQw4w9WgXcQ'],['Viviendo en Santidad','https://www.youtube.com/embed/dQw4w9WgXcQ']],
-        'Orlando' => [['Jóvenes en Propósito','https://www.youtube.com/embed/dQw4w9WgXcQ'],['Un Nuevo Comienzo','https://www.youtube.com/embed/dQw4w9WgXcQ'],['El Fuego del Espíritu','https://www.youtube.com/embed/dQw4w9WgXcQ']],
-        'Toby Jr.' => [['La Gracia que Salva','https://www.youtube.com/embed/dQw4w9WgXcQ'],['El Amor de Dios','https://www.youtube.com/embed/dQw4w9WgXcQ'],['La Familia de Dios','https://www.youtube.com/embed/dQw4w9WgXcQ']],
-        'Fundador' => [['Los Fundamentos de la Fe','https://www.youtube.com/embed/dQw4w9WgXcQ'],['La Herencia Espiritual','https://www.youtube.com/embed/dQw4w9WgXcQ'],['Perseverando hasta el Fin','https://www.youtube.com/embed/dQw4w9WgXcQ']],
-    ];
-    $videos = isset($all_videos[$name]) ? $all_videos[$name] : $all_videos['Melky'];
+function iglesia_page_pastor_dynamic($predicador) {
+    $post_id       = $predicador->ID;
+    $name          = $predicador->post_title;
+    $rol           = get_post_meta($post_id, '_iglesia_rol', true);
+    $bio           = $predicador->post_content ?: '';
+    $photo_url     = iglesia_get_predicador_foto($post_id) ?: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop';
+    $videos        = iglesia_get_predicador_videos($post_id);
     ?>
     <section class="pastors-section">
         <div class="container">
             <div class="pastor-header">
-                <img src="<?php echo esc_url($photo_url); ?>" alt="Pastor <?php echo esc_html($name); ?>" class="pastor-photo">
+                <img src="<?php echo esc_url($photo_url); ?>" alt="<?php echo esc_attr($name); ?>" class="pastor-photo">
                 <div class="pastor-info">
-                    <p class="role"><?php echo esc_html($role); ?></p>
-                    <h2>Pastor <?php echo esc_html($name); ?></h2>
-                    <p><?php echo esc_html($bio); ?></p>
+                    <?php if ($rol): ?><p class="role"><?php echo esc_html($rol); ?></p><?php endif; ?>
+                    <h2><?php echo esc_html($name); ?></h2>
+                    <?php if ($bio): ?><p><?php echo nl2br(esc_html($bio)); ?></p><?php endif; ?>
                 </div>
             </div>
-            <h3 style="font-family:Montserrat,sans-serif;font-size:1.5rem;font-weight:800;color:var(--blue-primary);margin-bottom:25px;">📹 Sermones de Pastor <?php echo esc_html($name); ?></h3>
+            <?php if (!empty($videos)): ?>
+            <h3 style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--blue-primary);margin-bottom:25px;">📹 Sermones de <?php echo esc_html($name); ?></h3>
             <div class="sermons-grid">
-                <?php foreach ($videos as $video) { ?>
+                <?php foreach ($videos as $v): ?>
                     <div class="sermon-card">
                         <div class="sermon-video">
-                            <iframe src="<?php echo esc_url($video[1]); ?>" title="<?php echo esc_attr($video[0]); ?>" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            <iframe src="<?php echo esc_url($v['embed_url']); ?>"
+                                    title="Sermón"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowfullscreen></iframe>
                         </div>
                         <div class="sermon-body">
-                            <h3><?php echo esc_html($video[0]); ?></h3>
-                            <p class="date">📅 Publicado recientemente</p>
+                            <h3><?php echo esc_html($v['title'] ?: 'Sermón'); ?></h3>
+                            <p class="date">📅 Publicado</p>
                         </div>
                     </div>
-                <?php } ?>
+                <?php endforeach; ?>
             </div>
+            <?php else: ?>
+            <p style="text-align:center;color:var(--text-muted);padding:30px 0;">Aún no hay sermones publicados. Visita el panel de administración &gt; Predicadores &gt; <?php echo esc_html($name); ?> para añadir videos.</p>
+            <?php endif; ?>
         </div>
     </section>
     <?php
@@ -607,9 +724,10 @@ function iglesia_page_jesus() { ?>
 <?php }
 
 // ===========================
-// HISTORIA PAGE
+// HISTORIA PAGE (dinámica desde CPT)
 // ===========================
-function iglesia_page_historia() { ?>
+function iglesia_page_historia() {
+    $etapas = iglesia_get_historia_data(); ?>
 <style>
 .timeline { position: relative; padding: 40px 0; }
 .timeline::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 3px; background: var(--gradient-blue); transform: translateX(-50%); border-radius: 2px; }
@@ -621,6 +739,7 @@ function iglesia_page_historia() { ?>
 .timeline-content .year { font-family: var(--font-display); font-size: 1.8rem; font-weight: 900; color: var(--blue-primary); margin-bottom: 8px; }
 .timeline-content h3 { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
 .timeline-content p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; }
+.timeline-content img { width:100%; height:170px; object-fit:cover; border-radius:10px; margin-top:14px; }
 .timeline-dot { position: absolute; left: 50%; transform: translateX(-50%); width: 20px; height: 20px; background: var(--accent-gold); border: 4px solid #fff; border-radius: 50%; top: 30px; box-shadow: 0 0 0 3px var(--blue-primary); z-index: 2; }
 @media (max-width: 768px) {
     .timeline::before { left: 20px; }
@@ -640,54 +759,19 @@ function iglesia_page_historia() { ?>
         <p style="font-size:1.05rem;line-height:1.9;color:var(--text-muted);">Nuestra iglesia nació del deseo de predicar el Evangelio puro de Jesucristo en nuestra comunidad. Desde sus humildes comienzos hasta el día de hoy, hemos visto la mano fiel de Dios guiando cada paso.</p>
     </div>
     <div class="timeline">
+        <?php foreach ($etapas as $etapa): ?>
         <div class="timeline-item">
             <div class="timeline-content">
-                <div class="year">2021</div>
-                <h3>Fundación de la Iglesia</h3>
-                <p>Un grupo de creyentes se reunió con la visión de establecer una iglesia comprometida con la Palabra de Dios, la oración y la comunidad. Los primeros cultos se realizaron en una casa adaptada como templo.</p>
+                <div class="year"><?php echo esc_html($etapa['anio']); ?></div>
+                <h3><?php echo esc_html($etapa['title']); ?></h3>
+                <p><?php echo esc_html($etapa['content']); ?></p>
+                <?php if (!empty($etapa['imagen'])): ?>
+                    <img src="<?php echo esc_url($etapa['imagen']); ?>" alt="<?php echo esc_attr($etapa['title']); ?>">
+                <?php endif; ?>
             </div>
             <div class="timeline-dot"></div>
         </div>
-        <div class="timeline-item">
-            <div class="timeline-content">
-                <div class="year">2022</div>
-                <h3>Crecimiento y Consolidación</h3>
-                <p>La iglesia experimentó un crecimiento significativo. Se formaron los primeros ministerios: alabanza, infantil y de oración. La congregación creció y se hizo necesario buscar un espacio más amplio.</p>
-            </div>
-            <div class="timeline-dot"></div>
-        </div>
-        <div class="timeline-item">
-            <div class="timeline-content">
-                <div class="year">2023</div>
-                <h3>Nuevo Templo</h3>
-                <p>Dios proveyó un nuevo local con capacidad para albergar a toda la congregación. Se inauguró el templo con un servicio de consagración y celebración al que asistieron más de 200 personas.</p>
-            </div>
-            <div class="timeline-dot"></div>
-        </div>
-        <div class="timeline-item">
-            <div class="timeline-content">
-                <div class="year">2024</div>
-                <h3>Expansión Ministerial</h3>
-                <p>Se establecieron nuevos ministerios: jóvenes, mujeres y hombres. La iglesia comenzó a tener impacto en la comunidad a través de obras sociales, visitas a hospitales y ayuda a familias necesitadas.</p>
-            </div>
-            <div class="timeline-dot"></div>
-        </div>
-        <div class="timeline-item">
-            <div class="timeline-content">
-                <div class="year">2025</div>
-                <h3>Proyección y Cobertura</h3>
-                <p>Se iniciaron transmisiones en vivo de los cultos, alcanzando a personas más allá de nuestra ciudad. La iglesia estableció alianzas con otras congregaciones y misiones en la región.</p>
-            </div>
-            <div class="timeline-dot"></div>
-        </div>
-        <div class="timeline-item">
-            <div class="timeline-content">
-                <div class="year">2026</div>
-                <h3>Un Nuevo Capítulo</h3>
-                <p>Hoy continuamos firmes en la fe, mirando hacia adelante con la visión de alcanzar a más personas con el Evangelio. Planeamos iniciar nuevas obras misioneras y expandir nuestros ministerios.</p>
-            </div>
-            <div class="timeline-dot"></div>
-        </div>
+        <?php endforeach; ?>
     </div>
 </div>
 <?php }

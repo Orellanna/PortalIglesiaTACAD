@@ -3,7 +3,7 @@
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Tabernáculo Cristiano AD - Una iglesia de fe, esperanza y amor. Te esperamos con los brazos abiertos.">
+    <meta name="description" content="<?php echo esc_attr(iglesia_nombre()); ?> - Una iglesia de fe, esperanza y amor. Te esperamos con los brazos abiertos.">
     <meta name="theme-color" content="#1a237e">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,11 +15,10 @@
     <div class="header-inner">
         <a href="<?php echo esc_url(home_url('/')); ?>" class="site-logo-wrap">
             <?php
-            $logo_path = get_template_directory() . '/images/logo.jpeg';
-            $logo_url  = get_template_directory_uri() . '/images/logo.jpeg';
-            if (file_exists($logo_path)) :
+            $logo_url = iglesia_logo_url();
+            if ($logo_url) :
             ?>
-                <img src="<?php echo esc_url($logo_url); ?>" alt="<?php bloginfo('name'); ?>" class="site-logo-img">
+                <img src="<?php echo esc_url($logo_url); ?>" alt="<?php echo esc_attr(iglesia_nombre()); ?>" class="site-logo-img">
             <?php elseif (function_exists('the_custom_logo') && has_custom_logo()) :
                 the_custom_logo();
             else :
@@ -68,15 +67,7 @@
                             }
                             echo '</ul></li>';
                         } elseif ($slug === 'sermones') {
-                            echo '<li' . $current . '><a href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
-                            echo '<ul>';
-                            $subs = ['pastor-melky'=>'Pastor Melky','pastor-orlando'=>'Pastor Orlando','pastor-toby-jr'=>'Pastor Toby Jr.','pastor-fundador'=>'Pastor Fundador'];
-                            foreach ($subs as $s_slug => $s_label) {
-                                $sp  = get_page_by_path($s_slug);
-                                $su  = $sp ? get_permalink($sp->ID) : home_url('/' . $s_slug . '/');
-                                echo '<li><a href="' . esc_url($su) . '">' . esc_html($s_label) . '</a></li>';
-                            }
-                            echo '</ul></li>';
+                            echo '<li' . $current . '><a href="' . esc_url($url) . '">' . esc_html($label) . '</a></li>';
                         } else {
                             echo '<li' . $current . '><a href="' . esc_url($url) . '">' . esc_html($label) . '</a></li>';
                         }
@@ -88,9 +79,9 @@
         </nav>
 
         <div class="nav-social">
-            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-            <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-            <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+            <?php $ig = iglesia_instagram(); if ($ig): ?><a href="<?php echo esc_url($ig); ?>" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a><?php endif; ?>
+            <?php $fb = iglesia_facebook(); if ($fb): ?><a href="<?php echo esc_url($fb); ?>" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a><?php endif; ?>
+            <?php $yt = iglesia_youtube(); if ($yt): ?><a href="<?php echo esc_url($yt); ?>" target="_blank" rel="noopener" aria-label="YouTube"><i class="fab fa-youtube"></i></a><?php endif; ?>
         </div>
 
         <a id="live-status-btn" href="#" class="live-status-btn live-offline" aria-label="En vivo">

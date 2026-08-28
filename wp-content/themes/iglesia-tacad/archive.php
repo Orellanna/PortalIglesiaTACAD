@@ -19,8 +19,12 @@ iglesia_page_banner($title);
             </article>
             <?php } ?>
         </div>
+        <?php iglesia_render_pagination(); ?>
         <?php } else { ?>
         <p style="text-align:center;color:var(--text-muted);">No hay publicaciones en esta categoría.</p>
+        <div style="text-align:center;margin-top:20px;">
+            <a href="<?php echo esc_url(iglesia_blog_url()); ?>" class="btn btn-blue btn-sm">&larr; Ver todas las publicaciones</a>
+        </div>
         <?php } ?>
     </div>
 </section>

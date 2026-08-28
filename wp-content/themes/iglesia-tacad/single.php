@@ -19,7 +19,7 @@ if (have_posts()) {
             <?php the_content(); ?>
         </div>
         <div style="margin-top:50px;padding-top:30px;border-top:1px solid #eee;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
-            <a href="<?php echo esc_url(home_url('/blog/')); ?>" class="btn btn-blue btn-sm">&larr; Volver al Blog</a>
+            <a href="<?php echo esc_url(iglesia_blog_url()); ?>" class="btn btn-blue btn-sm">&larr; Volver al Blog</a>
             <?php if (has_tag()) { the_tags('<div style="display:flex;gap:8px;flex-wrap:wrap;"><span style="font-size:0.8rem;color:var(--text-muted);">Etiquetas:</span>', '', '</div>'); } ?>
         </div>
         <?php if (comments_open() || get_comments_number()) { comments_template(); } ?>

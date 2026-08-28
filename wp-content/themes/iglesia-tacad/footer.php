@@ -3,14 +3,13 @@
 <footer id="site-footer">
     <div class="footer-grid">
         <div class="footer-brand">
-            <div class="logo">Tabernáculo <span>Cristiano</span></div>
-            <div class="logo-sub">Asambleas de Dios La Palma</div>
+            <div class="logo"><?php echo esc_html(iglesia_nombre()); ?></div>
+            <div class="logo-sub"><?php echo esc_html(iglesia_direccion()); ?></div>
             <p>Una iglesia que cree en la Palabra de Dios. Comprometidos con predicar el Evangelio puro de Jesucristo en nuestra ciudad y las naciones.</p>
             <div class="footer-social">
-                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
-                <a href="#" aria-label="Spotify"><i class="fab fa-spotify"></i></a>
+                <?php $ig = iglesia_instagram(); if ($ig): ?><a href="<?php echo esc_url($ig); ?>" target="_blank" rel="noopener" aria-label="Instagram"><i class="fab fa-instagram"></i></a><?php endif; ?>
+                <?php $fb = iglesia_facebook(); if ($fb): ?><a href="<?php echo esc_url($fb); ?>" target="_blank" rel="noopener" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a><?php endif; ?>
+                <?php $yt = iglesia_youtube(); if ($yt): ?><a href="<?php echo esc_url($yt); ?>" target="_blank" rel="noopener" aria-label="YouTube"><i class="fab fa-youtube"></i></a><?php endif; ?>
             </div>
         </div>
 
@@ -40,9 +39,16 @@
         <div class="footer-col">
             <h4>Horarios</h4>
             <ul>
-                <li><a href="#">Domingos 9:00am y 11:00am</a></li>
-                <li><a href="#">Miércoles 7:00pm</a></li>
-                <li><a href="#">Viernes Jóvenes 7:00pm</a></li>
+                <?php
+                $horarios_footer = iglesia_horarios();
+                if ($horarios_footer) {
+                    $lines = explode("\n", $horarios_footer);
+                    foreach ($lines as $line) {
+                        $line = trim($line);
+                        if ($line) echo '<li><a href="#">' . esc_html($line) . '</a></li>';
+                    }
+                }
+                ?>
             </ul>
         </div>
     </div>
